@@ -24,12 +24,7 @@ Sistema web de gestão empresarial, desenvolvido em **PHP**, **MySQL**, **Bootst
 
 ## Instalação local
 
-1. Clone o repositório na pasta do Apache:
-
-```bash
-git clone https://github.com/SEU-USUARIO/Sistema-de-Gestao.git
-cd SistemaDeGestao
-```
+1. Abaixa a pasta do repositório na pasta do Apache:
 
 Coloque na pasta `htdocs` do XAMPP, se preferir:
 
@@ -56,7 +51,7 @@ npm install
 npm run build
 ```
 
-5. Acesse no navegador:
+5. Abrir no navegador:
 
 ```
 http://localhost/SistemaDeGestao/
@@ -75,21 +70,6 @@ SistemaDeGestao/
 ├── templates/        # Header e footer
 └── index.php         # Dashboard
 ```
-
-## Publicar no GitHub
-
-Na pasta do projeto:
-
-```bash
-git init
-git add .
-git commit -m "Initial commit: Sistema de Gestão"
-git branch -M main
-git remote add origin https://github.com/SEU-USUARIO/Sistema-de-Gestao.git
-git push -u origin main
-```
-
-> **Importante:** o arquivo `config/pdo.php` não vai para o GitHub (está no `.gitignore`). Cada pessoa copia o `pdo.example.php` na própria máquina.
 
 ## Licença
 
