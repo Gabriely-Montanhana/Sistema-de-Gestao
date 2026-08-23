@@ -1,0 +1,183 @@
+"use strict";
+(() => {
+    'use strict';
+    let cnpjMask = null;
+    let telefoneMask = null;
+    function getAppRoot() {
+        return document.querySelector('meta[name="app-root"]')?.getAttribute('content') ?? '';
+    }
+    function apiUrl() {
+        return `${getAppRoot()}api/empresas.php`;
+    }
+    async function parseJson(response) {
+        const text = await response.text();
+        try {
+            return JSON.parse(text);
+        }
+        catch {
+            throw new Error(text.trim().startsWith('<')
+                ? 'Resposta inválida da API. Verifique Apache, PHP e o banco de dados.'
+                : text.slice(0, 200) || `Erro HTTP ${response.status}`);
+        }
+    }
+    async function apiGet(url) {
+        const response = await fetch(url);
+        const json = await parseJson(response);
+        if (!response.ok || !json.success) {
+            throw new Error(json.message ?? `Erro HTTP ${response.status}`);
+        }
+        return json.data;
+    }
+    async function apiPost(url, body) {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        const json = await parseJson(response);
+        if (!response.ok || !json.success) {
+            throw new Error(json.message ?? `Erro HTTP ${response.status}`);
+        }
+        return json.data;
+    }
+    function showAlert(message, type) {
+        const swal = window.Swal;
+        if (!swal) {
+            window.alert(message);
+            return;
+        }
+        swal.fire({
+            icon: type === 'success' ? 'success' : 'error',
+            title: type === 'success' ? 'Sucesso!' : 'Erro',
+            text: message,
+            confirmButtonText: 'OK',
+            confirmButtonColor: type === 'success' ? '#2563eb' : '#dc2626',
+        });
+    }
+    function statusBadge(status) {
+        return status === 'Ativo'
+            ? '<span class="badge rounded-pill text-bg-success">Ativo</span>'
+            : '<span class="badge rounded-pill text-bg-secondary">Inativo</span>';
+    }
+    function renderTabela(empresas) {
+        const tbody = document.getElementById('tabela-empresas');
+        if (!tbody) {
+            return;
+        }
+        if (empresas.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-muted">Nenhuma empresa cadastrada.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = empresas
+            .map((empresa) => `
+            <tr>
+                <td class="fw-semibold">${empresa.nome_empresa ?? ''}</td>
+                <td>${empresa.cnpj ?? ''}</td>
+                <td>${empresa.cidade ?? '—'}</td>
+                <td>${empresa.endereco ?? '—'}</td>
+                <td>${empresa.telefone ?? '—'}</td>
+                <td>${empresa.email ?? '—'}</td>
+                <td>${statusBadge(empresa.status ?? 'Ativo')}</td>
+            </tr>
+        `)
+            .join('');
+    }
+    async function carregarEmpresas() {
+        const tbody = document.getElementById('tabela-empresas');
+        try {
+            const empresas = await apiGet(apiUrl());
+            renderTabela(empresas);
+        }
+        catch (error) {
+            const msg = error instanceof Error ? error.message : 'Erro desconhecido';
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-danger">Falha ao carregar: ${msg}</td></tr>`;
+            }
+        }
+    }
+    function getFormData(form) {
+        const data = new FormData(form);
+        return {
+            nome_empresa: String(data.get('nome_empresa') ?? '').trim(),
+            cnpj: String(data.get('cnpj') ?? '').trim(),
+            cidade: String(data.get('cidade') ?? '').trim() || null,
+            endereco: String(data.get('endereco') ?? '').trim() || null,
+            telefone: String(data.get('telefone') ?? '').trim() || null,
+            email: String(data.get('email') ?? '').trim() || null,
+        };
+    }
+    function aplicarMascaras() {
+        const imask = window.IMask;
+        if (!imask) {
+            return;
+        }
+        const cnpjInput = document.getElementById('cnpj');
+        const telefoneInput = document.getElementById('telefone');
+        if (cnpjInput) {
+            cnpjMask = imask(cnpjInput, { mask: '00.000.000/0000-00' });
+        }
+        if (telefoneInput) {
+            telefoneMask = imask(telefoneInput, {
+                mask: [
+                    { mask: '(00) 0000-0000' },
+                    { mask: '(00) 00000-0000' },
+                ],
+            });
+        }
+    }
+    function limparMascaras() {
+        cnpjMask?.updateValue('');
+        telefoneMask?.updateValue('');
+    }
+    async function salvarEmpresa(form) {
+        const btn = document.getElementById('btn-salvar');
+        const dados = getFormData(form);
+        btn?.setAttribute('disabled', 'true');
+        try {
+            await apiPost(apiUrl(), dados);
+            showAlert('Empresa cadastrada com sucesso!', 'success');
+            form.reset();
+            form.classList.remove('was-validated');
+            limparMascaras();
+            await carregarEmpresas();
+        }
+        catch (error) {
+            const msg = error instanceof Error ? error.message : 'Erro desconhecido';
+            showAlert(`Não foi possível salvar: ${msg}`, 'danger');
+        }
+        finally {
+            btn?.removeAttribute('disabled');
+        }
+    }
+    function init() {
+        const form = document.getElementById('form-empresa');
+        const tabVisualizar = document.getElementById('tab-visualizar');
+        if (!form) {
+            return;
+        }
+        aplicarMascaras();
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+            void salvarEmpresa(form);
+        });
+        form.addEventListener('reset', () => {
+            form.classList.remove('was-validated');
+            setTimeout(limparMascaras, 0);
+        });
+        tabVisualizar?.addEventListener('shown.bs.tab', () => {
+            void carregarEmpresas();
+        });
+        void carregarEmpresas();
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    }
+    else {
+        init();
+    }
+})();
