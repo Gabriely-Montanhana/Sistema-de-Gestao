@@ -1,0 +1,84 @@
+/* Site público (vitrine) */
+
+.public-navbar {
+  background: #0f172a;
+}
+
+.public-navbar .navbar-brand,
+.public-navbar .nav-link,
+.public-navbar .navbar-brand:hover {
+  color: #f8fafc;
+}
+
+.public-navbar .nav-link {
+  color: #cbd5e1;
+}
+
+.public-navbar .nav-link:hover,
+.public-navbar .nav-link.active {
+  color: #fff;
+}
+
+.public-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 55%, #2563eb 100%);
+  color: #fff;
+  padding: 4.5rem 0 4rem;
+}
+
+.public-hero-sm {
+  padding: 2.5rem 0;
+}
+
+.link-ver-mais {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.link-ver-mais:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.public-hero .lead {
+  color: #cbd5e1;
+  max-width: 36rem;
+}
+
+.public-hero-kicker {
+  letter-spacing: 0.12em;
+  color: #93c5fd;
+}
+
+.public-section {
+  padding: 4rem 0;
+}
+
+.catalog-card {
+  border: 0;
+  height: 100%;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.catalog-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.75rem 1.5rem rgba(15, 23, 42, 0.12) !important;
+}
+
+.catalog-icon {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #dbeafe;
+  color: #2563eb;
+  font-size: 1.35rem;
+}
+
+.public-footer {
+  background: #0f172a;
+  color: #94a3b8;
+}

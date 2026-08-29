@@ -1,11 +1,4 @@
-/* Complementos visuais sobre o Bootstrap */
-
-html,
-body {
-  overflow-x: hidden;
-  max-width: 100%;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-}
+/* Layout e componentes do painel administrativo */
 
 .container-fluid > .row {
   margin-left: 0;
@@ -15,10 +8,6 @@ body {
 .main-column {
   min-width: 0;
   max-width: 100%;
-}
-
-.min-w-0 {
-  min-width: 0;
 }
 
 .content {
@@ -32,6 +21,7 @@ body {
   background: linear-gradient(180deg, #1e2a3a 0%, #162030 100%);
   color: #cbd5e1;
 }
+
 .sidebar-offcanvas {
   background: linear-gradient(180deg, #1e2a3a 0%, #162030 100%);
   width: 260px !important;
@@ -171,4 +161,13 @@ body {
 .btn-acoes:hover {
   background: #f1f5f9;
   color: #334155;
+}
+
+.login-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 55%, #2563eb 100%);
+}
+
+.login-card {
+  max-width: 420px;
 }

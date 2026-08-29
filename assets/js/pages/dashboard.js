@@ -53,39 +53,31 @@ function renderTabelaStatus(rows, totais) {
         </tr>
     `;
 }
-function renderIndicadores(data, receitaTotal) {
-    const ind = data.indicadores;
-    if (!ind) {
-        setText('kpi-receita', formatarMoeda(String(receitaTotal)));
-        setText('kpi-total-servicos', '0');
-        setText('kpi-pendentes', '0');
-        setText('kpi-estoque-baixo', '0');
-        setText('destaque-produto', 'Nenhum produto registrado');
-        setText('destaque-empresa', 'Nenhuma empresa registrada');
+function renderIndicadores(data, receitaTotal, erro) {
+    if (erro) {
+        setText('kpi-receita', '—');
+        setText('kpi-total-servicos', '—');
+        setText('kpi-pendentes', '—');
+        setText('kpi-estoque-baixo', '—');
+        setText('destaque-produto', '—');
+        setText('destaque-empresa', '—');
+        const tbody = document.getElementById('tabela-status');
+        const tfoot = document.getElementById('tabela-status-total');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-danger">Falha ao carregar: ${erro}. Verifique o XAMPP e importe o schema.sql no phpMyAdmin.</td></tr>`;
+        }
+        if (tfoot) {
+            tfoot.innerHTML = '';
+        }
         return;
     }
+    const ind = data?.indicadores;
     setText('kpi-receita', formatarMoeda(String(receitaTotal)));
-    setText('kpi-total-servicos', ind.total_servicos || '0');
-    setText('kpi-pendentes', ind.servicos_pendentes || '0');
-    setText('kpi-estoque-baixo', ind.produtos_estoque_baixo || '0');
-    setText('destaque-produto', ind.produto_mais_usado?.trim() || 'Nenhum produto registrado');
-    setText('destaque-empresa', ind.empresa_destaque?.trim() || 'Nenhuma empresa registrada');
-}
-function renderErroDashboard(msg) {
-    setText('kpi-receita', '—');
-    setText('kpi-total-servicos', '—');
-    setText('kpi-pendentes', '—');
-    setText('kpi-estoque-baixo', '—');
-    setText('destaque-produto', '—');
-    setText('destaque-empresa', '—');
-    const tbody = document.getElementById('tabela-status');
-    const tfoot = document.getElementById('tabela-status-total');
-    if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="3" class="text-danger">Falha ao carregar: ${msg}. Verifique o XAMPP e importe o schema.sql no phpMyAdmin.</td></tr>`;
-    }
-    if (tfoot) {
-        tfoot.innerHTML = '';
-    }
+    setText('kpi-total-servicos', ind?.total_servicos || '0');
+    setText('kpi-pendentes', ind?.servicos_pendentes || '0');
+    setText('kpi-estoque-baixo', ind?.produtos_estoque_baixo || '0');
+    setText('destaque-produto', ind?.produto_mais_usado?.trim() || 'Nenhum produto registrado');
+    setText('destaque-empresa', ind?.empresa_destaque?.trim() || 'Nenhuma empresa registrada');
 }
 async function carregarDashboard() {
     try {
@@ -98,7 +90,7 @@ async function carregarDashboard() {
     }
     catch (error) {
         const msg = error instanceof Error ? error.message : 'Erro desconhecido';
-        renderErroDashboard(msg);
+        renderIndicadores(null, 0, msg);
     }
 }
 document.addEventListener('DOMContentLoaded', () => {

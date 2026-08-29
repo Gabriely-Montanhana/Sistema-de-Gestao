@@ -1,4 +1,4 @@
-import type { ApiResponse } from '../types/interfaces.js';
+import type { ApiResponse } from '../types/tipos.js';
 
 async function parseJson<T>(response: Response): Promise<ApiResponse<T>> {
     const text = await response.text();
@@ -14,8 +14,20 @@ async function parseJson<T>(response: Response): Promise<ApiResponse<T>> {
     }
 }
 
+export function getAppRoot(): string {
+    return document.querySelector('meta[name="app-root"]')?.getAttribute('content') ?? '';
+}
+
+function resolveUrl(url: string): string {
+    if (/^(https?:)?\/\//.test(url) || url.startsWith('/')) {
+        return url;
+    }
+
+    return `${getAppRoot()}${url}`;
+}
+
 export async function apiGet<T>(url: string): Promise<T> {
-    const response = await fetch(url);
+    const response = await fetch(resolveUrl(url));
     const json = await parseJson<T>(response);
 
     if (!response.ok || !json.success) {
@@ -26,7 +38,7 @@ export async function apiGet<T>(url: string): Promise<T> {
 }
 
 export async function apiPost<T>(url: string, body: unknown): Promise<T> {
-    const response = await fetch(url, {
+    const response = await fetch(resolveUrl(url), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -39,8 +51,4 @@ export async function apiPost<T>(url: string, body: unknown): Promise<T> {
     }
 
     return json.data;
-}
-
-export function getAppBase(): string {
-    return document.querySelector('meta[name="app-base"]')?.getAttribute('content') ?? '';
 }

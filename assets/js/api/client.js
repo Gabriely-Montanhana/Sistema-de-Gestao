@@ -9,8 +9,17 @@ async function parseJson(response) {
             : text.slice(0, 200) || `Erro HTTP ${response.status}`);
     }
 }
+export function getAppRoot() {
+    return document.querySelector('meta[name="app-root"]')?.getAttribute('content') ?? '';
+}
+function resolveUrl(url) {
+    if (/^(https?:)?\/\//.test(url) || url.startsWith('/')) {
+        return url;
+    }
+    return `${getAppRoot()}${url}`;
+}
 export async function apiGet(url) {
-    const response = await fetch(url);
+    const response = await fetch(resolveUrl(url));
     const json = await parseJson(response);
     if (!response.ok || !json.success) {
         throw new Error(json.message ?? `Erro HTTP ${response.status}`);
@@ -18,7 +27,7 @@ export async function apiGet(url) {
     return json.data;
 }
 export async function apiPost(url, body) {
-    const response = await fetch(url, {
+    const response = await fetch(resolveUrl(url), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -28,7 +37,4 @@ export async function apiPost(url, body) {
         throw new Error(json.message ?? `Erro HTTP ${response.status}`);
     }
     return json.data;
-}
-export function getAppBase() {
-    return document.querySelector('meta[name="app-base"]')?.getAttribute('content') ?? '';
 }

@@ -1,0 +1,50 @@
+<?php
+
+declare(strict_types=1);
+
+require_once dirname(__DIR__, 2) . '/config/bootstrap.php';
+require_once dirname(__DIR__, 2) . '/config/helpers.php';
+require_once dirname(__DIR__) . '/includes/catalogo.php';
+
+$servicos = [];
+$erroCatalogo = null;
+
+try {
+    $servicos = catalogo_servicos();
+} catch (Throwable $e) {
+    $erroCatalogo = 'Catálogo indisponível no momento. Verifique a conexão com o banco.';
+}
+
+$pageTitle = 'Serviços';
+$currentPage = 'servicos';
+
+require dirname(__DIR__) . '/templates/header.php';
+?>
+
+<section class="public-hero public-hero-sm">
+    <div class="container">
+        <p class="public-hero-kicker text-uppercase small fw-semibold mb-2">Catálogo</p>
+        <h1 class="fw-bold mb-2">Serviços</h1>
+        <p class="lead mb-0">Todos os pedidos cadastrados no sistema.</p>
+    </div>
+</section>
+
+<section class="public-section bg-light">
+    <div class="container">
+        <?php if ($erroCatalogo): ?>
+            <div class="alert alert-warning mb-0"><?= htmlspecialchars($erroCatalogo) ?></div>
+        <?php else: ?>
+            <div class="row g-4">
+                <?php if (count($servicos) === 0): ?>
+                    <?php lista_vazia('Nenhum serviço para exibir ainda.'); ?>
+                <?php else: ?>
+                    <?php foreach ($servicos as $servico): ?>
+                        <?php card_servico($servico, true); ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</section>
+
+<?php require dirname(__DIR__) . '/templates/footer.php'; ?>

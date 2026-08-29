@@ -1,111 +1,111 @@
 <?php
+
 declare(strict_types=1);
 
-$pageTitle = 'Dashboard';
-$currentPage = 'dashboard';
-$pageScript = 'pages/dashboard.js';
+require_once __DIR__ . '/config/bootstrap.php';
+require_once __DIR__ . '/config/helpers.php';
+require_once __DIR__ . '/site/includes/catalogo.php';
 
-require __DIR__ . '/templates/header.php';
+$paths = app_paths();
+$empresas = [];
+$produtos = [];
+$servicos = [];
+$erroCatalogo = null;
+
+try {
+    $servicos = catalogo_servicos(3);
+    $produtos = catalogo_produtos(4);
+    $empresas = catalogo_empresas(2);
+} catch (Throwable $e) {
+    $erroCatalogo = 'Catálogo indisponível no momento. Verifique a conexão com o banco.';
+}
+
+$pageTitle = 'Início';
+$currentPage = 'home';
+
+require __DIR__ . '/site/templates/header.php';
 ?>
 
-<div class="page-header mb-4">
-    <h2 class="fw-bold mb-1">Indicadores Analíticos</h2>
-</div>
+<section class="public-hero">
+    <div class="container">
+        <p class="public-hero-kicker text-uppercase small fw-semibold mb-3">Tornearia Sátelite</p>
+        <h1 class="display-5 fw-bold mb-3">Peças, serviços e clientes em um só lugar</h1>
+    </div>
+</section>
 
-<div class="row g-4 mb-4">
-    <div class="col-xl-3 col-md-6">
-        <div class="card border-0 shadow-sm kpi-card green h-100">
-            <div class="card-body">
-                <div class="kpi-icon rounded-3 mb-3"><i class="bi bi-currency-dollar"></i></div>
-                <div class="kpi-label text-muted small">Receita Total</div>
-                <div class="kpi-value fs-3 fw-bold" id="kpi-receita"><span class="loading">Carregando...</span></div>
-            </div>
-        </div>
+<?php if ($erroCatalogo): ?>
+    <div class="container py-5">
+        <div class="alert alert-warning mb-0"><?= htmlspecialchars($erroCatalogo) ?></div>
     </div>
-    <div class="col-xl-3 col-md-6">
-        <div class="card border-0 shadow-sm kpi-card blue h-100">
-            <div class="card-body">
-                <div class="kpi-icon rounded-3 mb-3"><i class="bi bi-clipboard-data"></i></div>
-                <div class="kpi-label text-muted small">Total de Serviços</div>
-                <div class="kpi-value fs-3 fw-bold" id="kpi-total-servicos"><span class="loading">...</span></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6">
-        <div class="card border-0 shadow-sm kpi-card orange h-100">
-            <div class="card-body">
-                <div class="kpi-icon rounded-3 mb-3"><i class="bi bi-exclamation-triangle"></i></div>
-                <div class="kpi-label text-muted small">Serviços Pendentes</div>
-                <div class="kpi-value fs-3 fw-bold" id="kpi-pendentes"><span class="loading">...</span></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6">
-        <div class="card border-0 shadow-sm kpi-card red h-100">
-            <div class="card-body">
-                <div class="kpi-icon rounded-3 mb-3"><i class="bi bi-box"></i></div>
-                <div class="kpi-label text-muted small">Produtos Estoque Baixo</div>
-                <div class="kpi-value fs-3 fw-bold" id="kpi-estoque-baixo"><span class="loading">...</span></div>
-            </div>
-        </div>
-    </div>
-</div>
+<?php endif; ?>
 
-<div class="row g-4">
-    <div class="col-lg-7">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white border-bottom py-3">
-                <h5 class="card-title mb-0 fw-semibold">
-                    <i class="bi bi-bar-chart me-2 text-secondary"></i>Serviços por Status
-                </h5>
+<section id="servicos" class="public-section bg-light">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end gap-3 mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Serviços recentes</h2>
+                <p class="text-muted mb-0">Pedidos cadastrados</p>
             </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Status</th>
-                            <th>Quantidade</th>
-                            <th>Receita</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabela-status">
-                        <tr><td colspan="3" class="loading text-muted">Carregando...</td></tr>
-                    </tbody>
-                    <tfoot id="tabela-status-total"></tfoot>
-                </table>
-            </div>
+            <a class="link-ver-mais" href="<?= htmlspecialchars($paths['url']) ?>site/pages/servicos.php">
+                Ver mais <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        <div class="row g-4">
+            <?php if (count($servicos) === 0): ?>
+                <?php lista_vazia('Nenhum serviço para exibir ainda.'); ?>
+            <?php else: ?>
+                <?php foreach ($servicos as $servico): ?>
+                    <?php card_servico($servico); ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
+</section>
 
-    <div class="col-lg-5">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white border-bottom py-3">
-                <h5 class="card-title mb-0 fw-semibold">
-                    <i class="bi bi-star me-2 text-secondary"></i>Destaques
-                </h5>
+<section id="produtos" class="public-section">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end gap-3 mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Produtos</h2>
+                <p class="text-muted mb-0">Itens do estoque</p>
             </div>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex align-items-start gap-3 py-4">
-                    <div class="highlight-icon blue rounded-3 flex-shrink-0">
-                        <i class="bi bi-trophy"></i>
-                    </div>
-                    <div>
-                        <span class="text-muted small d-block">Produto mais usado:</span>
-                        <strong class="text-primary fs-6" id="destaque-produto">...</strong>
-                    </div>
-                </li>
-                <li class="list-group-item d-flex align-items-start gap-3 py-4">
-                    <div class="highlight-icon green rounded-3 flex-shrink-0">
-                        <i class="bi bi-building"></i>
-                    </div>
-                    <div>
-                        <span class="text-muted small d-block">Empresa com mais serviços:</span>
-                        <strong class="text-success fs-6" id="destaque-empresa">...</strong>
-                    </div>
-                </li>
-            </ul>
+            <a class="link-ver-mais" href="<?= htmlspecialchars($paths['url']) ?>site/pages/produtos.php">
+                Ver mais <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        <div class="row g-4">
+            <?php if (count($produtos) === 0): ?>
+                <?php lista_vazia('Nenhum produto cadastrado.'); ?>
+            <?php else: ?>
+                <?php foreach ($produtos as $produto): ?>
+                    <?php card_produto($produto); ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
-</div>
+</section>
 
-<?php require __DIR__ . '/templates/footer.php'; ?>
+<section id="clientes" class="public-section bg-light">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end gap-3 mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Clientes</h2>
+                <p class="text-muted mb-0">Empresas ativas</p>
+            </div>
+            <a class="link-ver-mais" href="<?= htmlspecialchars($paths['url']) ?>site/pages/clientes.php">
+                Ver mais <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        <div class="row g-4">
+            <?php if (count($empresas) === 0): ?>
+                <?php lista_vazia('Nenhuma empresa ativa para exibir.'); ?>
+            <?php else: ?>
+                <?php foreach ($empresas as $empresa): ?>
+                    <?php card_empresa($empresa); ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+    </div>
+</section>
+
+<?php require __DIR__ . '/site/templates/footer.php'; ?>

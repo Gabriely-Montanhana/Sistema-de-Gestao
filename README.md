@@ -1,20 +1,18 @@
 # Sistema de Gestão
 
-Sistema web de gestão empresarial, desenvolvido em **PHP**, **MySQL**, **Bootstrap 5** e **TypeScript**.
+Sistema web de gestão para tornearia, com **dois lados** no mesmo projeto:
 
-## Funcionalidades
+- **Site público** — vitrine de serviços, produtos e clientes
+- **Admin** — cadastro e indicadores (dashboard, empresas, serviços, estoque)
 
-- Dashboard com indicadores analíticos
-- Cadastro de empresas/clientes (CRUD)
-- Listagem com editar, ativar e inativar
-- Módulos de serviços e estoque (em desenvolvimento)
+Os dois usam o mesmo banco MySQL, a mesma conexão PHP e os mesmos helpers.
 
 ## Tecnologias
 
 - PHP 8+
 - MySQL / MariaDB
 - Bootstrap 5 + Bootstrap Icons
-- SweetAlert2 + IMask
+- SweetAlert2 + IMask (apenas no admin)
 - TypeScript (compilado para `assets/js/`)
 
 ## Requisitos
@@ -24,17 +22,13 @@ Sistema web de gestão empresarial, desenvolvido em **PHP**, **MySQL**, **Bootst
 
 ## Instalação local
 
-1. Abaixa a pasta do repositório na pasta do Apache:
-
-Coloque na pasta `htdocs` do XAMPP, se preferir:
+1. Coloque o repositório na pasta do Apache:
 
 ```
 C:\xampp\htdocs\SistemaDeGestao
 ```
 
-2. Configure o banco de dados no phpMyAdmin:
-
-- Importe `database/schema.sql`
+2. No phpMyAdmin, importe `database/schema.sql`.
 
 3. Configure a conexão com o MySQL:
 
@@ -53,22 +47,48 @@ npm run build
 
 5. Abrir no navegador:
 
-```
-http://localhost/SistemaDeGestao/
-```
+| Área | URL |
+|---|---|
+| Site público | http://localhost/SistemaDeGestao/ |
+| Admin | http://localhost/SistemaDeGestao/admin/ |
+
+## O que é compartilhado e o que é de cada lado
+
+**Usar nos dois**
+
+- `config/` — conexão com o banco (`pdo.php`), caminhos (`bootstrap.php`) e helpers (`formatar_moeda`)
+- `database/` — tabelas, views e dados iniciais
+- `api/catalogo.php` — leitura pública (empresas ativas, estoque, serviços)
+- `assets/css/shared.css` — fonte e reset
+- `src/api/client.ts`, `src/utils/formatters.ts`, `src/types/interfaces.ts` — cliente HTTP, moeda e tipos
+
+**Só admin**
+
+- `admin/` — dashboard, CRUD, sidebar
+- `api/dashboard.php`, `api/empresas.php` — indicadores e escrita
+- `assets/css/admin.css` e `src/pages/` — layout e scripts do painel
+- SweetAlert2 e IMask
+
+**Só site público**
+
+- `index.php` + `site/templates/` — vitrine
+- `assets/css/public.css` — hero, cards, navbar
 
 ## Estrutura do projeto
 
 ```
 SistemaDeGestao/
-├── api/              # Endpoints JSON (dashboard, etc.)
-├── assets/           # CSS e JavaScript compilado
-├── config/           # Conexão com banco (pdo.php local)
-├── database/         # Scripts SQL
-├── pages/            # Páginas do sistema
-├── src/              # Código TypeScript fonte
-├── templates/        # Header e footer
-└── index.php         # Dashboard
+├── index.php            # Site público
+├── admin/               # Painel administrativo
+│   ├── index.php        # Dashboard
+│   ├── pages/           # Empresas, serviços, estoque
+│   └── templates/
+├── site/templates/      # Header e footer da vitrine
+├── api/                 # Endpoints JSON
+├── assets/              # CSS e JavaScript compilado
+├── config/              # PDO, bootstrap e helpers
+├── database/            # Scripts SQL
+└── src/                 # TypeScript fonte
 ```
 
 ## Licença

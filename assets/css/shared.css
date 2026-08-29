@@ -1,0 +1,12 @@
+/* Estilos usados pelo admin e pelo site público */
+
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.min-w-0 {
+  min-width: 0;
+}

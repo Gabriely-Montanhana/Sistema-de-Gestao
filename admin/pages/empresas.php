@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 session_start();
 
-require_once __DIR__ . '/../config/pdo.php';
+require_once __DIR__ . '/../../config/pdo.php';
 
 function redirectEmpresas(string $aba = 'cadastro', int $editId = 0): never
 {
@@ -286,10 +286,6 @@ require __DIR__ . '/../templates/header.php';
                             <a href="empresas.php" class="btn btn-outline-secondary">
                                 <i class="bi bi-x-lg me-1"></i> Cancelar edição
                             </a>
-                        <?php else: ?>
-                            <button type="reset" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-counterclockwise me-1"></i> Limpar
-                            </button>
                         <?php endif; ?>
                     </div>
                 </form>
@@ -309,7 +305,7 @@ require __DIR__ . '/../templates/header.php';
                     <thead class="table-light">
                         <tr>
                             <th>Nome</th>
-                            <th>CNPJ</th>
+                            <th>CNPJ/CPF</th>
                             <th>Cidade</th>
                             <th>Endereço</th>
                             <th>Telefone</th>
