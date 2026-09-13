@@ -17,6 +17,7 @@ try {
 
 $pageTitle = 'Produtos';
 $currentPage = 'produtos';
+$pageScript = 'pages/catalogo.js';
 
 require dirname(__DIR__) . '/templates/header.php';
 ?>
@@ -24,7 +25,16 @@ require dirname(__DIR__) . '/templates/header.php';
 <section class="public-hero public-hero-sm">
     <div class="container">
         <p class="public-hero-kicker text-uppercase small fw-semibold mb-2">Catálogo</p>
-        <h1 class="fw-bold mb-2">Produtos</h1>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-2">
+            <h1 class="fw-bold mb-0">Produtos</h1>
+            <?php if (!$erroCatalogo && count($produtos) > 0): ?>
+                <?php catalogo_barra_filtro([
+                    '' => 'Estoque',
+                    'baixo' => 'Baixo',
+                    'normal' => 'Normal',
+                ], 'nivel'); ?>
+            <?php endif; ?>
+        </div>
         <p class="lead mb-0">Itens disponíveis no estoque.</p>
     </div>
 </section>
@@ -41,6 +51,7 @@ require dirname(__DIR__) . '/templates/header.php';
                     <?php foreach ($produtos as $produto): ?>
                         <?php card_produto($produto); ?>
                     <?php endforeach; ?>
+                    <?php catalogo_filtro_vazio(); ?>
                 <?php endif; ?>
             </div>
         <?php endif; ?>

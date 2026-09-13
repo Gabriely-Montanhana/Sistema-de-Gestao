@@ -17,6 +17,7 @@ try {
 
 $pageTitle = 'Serviços';
 $currentPage = 'servicos';
+$pageScript = 'pages/catalogo.js';
 
 require dirname(__DIR__) . '/templates/header.php';
 ?>
@@ -24,7 +25,17 @@ require dirname(__DIR__) . '/templates/header.php';
 <section class="public-hero public-hero-sm">
     <div class="container">
         <p class="public-hero-kicker text-uppercase small fw-semibold mb-2">Catálogo</p>
-        <h1 class="fw-bold mb-2">Serviços</h1>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-2">
+            <h1 class="fw-bold mb-0">Serviços</h1>
+            <?php if (!$erroCatalogo && count($servicos) > 0): ?>
+                <?php catalogo_barra_filtro([
+                    '' => 'Status',
+                    'Pendente' => 'Pendente',
+                    'Em Andamento' => 'Em andamento',
+                    'Concluído' => 'Concluído',
+                ], 'status'); ?>
+            <?php endif; ?>
+        </div>
         <p class="lead mb-0">Todos os pedidos cadastrados no sistema.</p>
     </div>
 </section>
@@ -41,6 +52,7 @@ require dirname(__DIR__) . '/templates/header.php';
                     <?php foreach ($servicos as $servico): ?>
                         <?php card_servico($servico, true); ?>
                     <?php endforeach; ?>
+                    <?php catalogo_filtro_vazio(); ?>
                 <?php endif; ?>
             </div>
         <?php endif; ?>

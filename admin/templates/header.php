@@ -27,7 +27,7 @@ $currentPage = $currentPage ?? 'dashboard';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <link href="<?= $assetsPath ?>css/shared.css?v=2" rel="stylesheet">
-    <link href="<?= $assetsPath ?>css/admin.css?v=2" rel="stylesheet">
+    <link href="<?= $assetsPath ?>css/admin.css?v=4" rel="stylesheet">
 </head>
 <body class="bg-light overflow-x-hidden">
 <div class="container-fluid g-0 overflow-hidden">

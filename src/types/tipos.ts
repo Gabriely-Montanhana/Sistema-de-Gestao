@@ -24,53 +24,14 @@ export type DashboardTotais = {
     receita: number
 }
 
+export type RankingItem = {
+    nome: string,
+    total: string | number
+}
+
 export type DashboardData = {
     indicadores: DashboardIndicadores | null,
-    servicos_por_status: ServicoPorStatus[]
-}
-
-export type Empresa = {
-    id_empresa: string,
-    nome_empresa: string,
-    cnpj: string,
-    cidade: string | null,
-    endereco: string | null,
-    telefone: string | null,
-    email: string | null,
-    status: 'Ativo' | 'Inativo'
-}
-
-export type EmpresaInput = {
-    nome_empresa: string,
-    cnpj: string,
-    cidade?: string | null,
-    endereco?: string | null,
-    telefone?: string | null,
-    email?: string | null
-}
-
-export type CatalogoEmpresa = {
-    nome_empresa: string,
-    cidade: string | null,
-    telefone: string | null,
-    email: string | null
-}
-
-export type CatalogoProduto = {
-    nome_produto: string,
-    preco: string,
-    quantidade: string
-}
-
-export type CatalogoServico = {
-    descricao: string | null,
-    status: string,
-    valor_total: string,
-    nome_empresa: string
-}
-
-export type CatalogoData = {
-    empresas: CatalogoEmpresa[],
-    produtos: CatalogoProduto[],
-    servicos: CatalogoServico[]
+    servicos_por_status: ServicoPorStatus[],
+    ranking_produtos?: RankingItem[],
+    ranking_empresas?: RankingItem[]
 }

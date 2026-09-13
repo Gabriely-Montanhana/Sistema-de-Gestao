@@ -23,6 +23,14 @@ function setFlash(string $type, string $message): void
     $_SESSION['flash'] = ['type' => $type, 'message' => $message];
 }
 
+function empresaTemServico(PDO $pdo, int $id): bool
+{
+    $stmt = $pdo->prepare('SELECT id_servico FROM servicos WHERE id_empresa = :id LIMIT 1');
+    $stmt->execute([':id' => $id]);
+
+    return (bool) $stmt->fetch();
+}
+
 function cnpjEmUso(PDO $pdo, string $cnpj, int $ignoreId = 0): bool
 {
     $sql = 'SELECT id_empresa FROM empresas WHERE cnpj = :cnpj';
@@ -37,6 +45,17 @@ function cnpjEmUso(PDO $pdo, string $cnpj, int $ignoreId = 0): bool
     $stmt->execute($params);
 
     return (bool) $stmt->fetch();
+}
+
+function tipoDocumentoAtual(?array $empresa, array $old): string
+{
+    if (($old['tipo_documento'] ?? '') === 'cpf' || ($old['tipo_documento'] ?? '') === 'cnpj') {
+        return (string) $old['tipo_documento'];
+    }
+
+    $digitos = preg_replace('/\D+/', '', (string) ($empresa['cnpj'] ?? '')) ?? '';
+
+    return strlen($digitos) === 11 ? 'cpf' : 'cnpj';
 }
 
 function campoFormulario(string $campo, ?array $empresa, array $old): string
@@ -63,13 +82,24 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $id = (int) ($_POST['id_empresa'] ?? 0);
             $nome = trim((string) ($_POST['nome_empresa'] ?? ''));
             $cnpj = trim((string) ($_POST['cnpj'] ?? ''));
+            $tipoDocumento = ($_POST['tipo_documento'] ?? 'cnpj') === 'cpf' ? 'cpf' : 'cnpj';
+            $digitosDocumento = preg_replace('/\D+/', '', $cnpj) ?? '';
+            $rotuloDocumento = $tipoDocumento === 'cpf' ? 'CPF' : 'CNPJ';
 
             if ($nome === '' || $cnpj === '') {
-                throw new InvalidArgumentException('Nome e CNPJ são obrigatórios.');
+                throw new InvalidArgumentException('Nome e ' . $rotuloDocumento . ' são obrigatórios.');
+            }
+
+            if ($tipoDocumento === 'cpf' && strlen($digitosDocumento) !== 11) {
+                throw new InvalidArgumentException('Informe um CPF válido.');
+            }
+
+            if ($tipoDocumento === 'cnpj' && strlen($digitosDocumento) !== 14) {
+                throw new InvalidArgumentException('Informe um CNPJ válido.');
             }
 
             if (cnpjEmUso($pdo, $cnpj, $id)) {
-                throw new InvalidArgumentException('CNPJ já cadastrado.');
+                throw new InvalidArgumentException($rotuloDocumento . ' já cadastrado.');
             }
 
             $dados = [
@@ -112,6 +142,42 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             redirectEmpresas('cadastro');
         }
 
+        if ($acao === 'excluir') {
+            $id = (int) ($_POST['id_empresa'] ?? 0);
+
+            if ($id <= 0) {
+                throw new InvalidArgumentException('Empresa inválida.');
+            }
+
+            $stmt = $pdo->prepare('SELECT id_empresa, status FROM empresas WHERE id_empresa = :id');
+            $stmt->execute([':id' => $id]);
+            $empresa = $stmt->fetch();
+
+            if (!$empresa) {
+                throw new InvalidArgumentException('Empresa não encontrada.');
+            }
+
+            if (empresaTemServico($pdo, $id)) {
+                if ($empresa['status'] !== 'Inativo') {
+                    $stmt = $pdo->prepare("UPDATE empresas SET status = 'Inativo' WHERE id_empresa = :id");
+                    $stmt->execute([':id' => $id]);
+                }
+
+                setFlash('success', 'Esta empresa possui serviços e não pode ser excluída. Ela foi desativada.');
+                redirectEmpresas('visualizar');
+            }
+
+            $stmt = $pdo->prepare('DELETE FROM empresas WHERE id_empresa = :id');
+            $stmt->execute([':id' => $id]);
+
+            if ($stmt->rowCount() === 0) {
+                throw new InvalidArgumentException('Empresa não encontrada.');
+            }
+
+            setFlash('success', 'Empresa excluída com sucesso!');
+            redirectEmpresas('visualizar');
+        }
+
         if ($acao === 'ativar' || $acao === 'inativar') {
             $id = (int) ($_POST['id_empresa'] ?? 0);
             $status = $acao === 'ativar' ? 'Ativo' : 'Inativo';
@@ -144,7 +210,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     }
 }
 
-$empresas = $pdo->query('SELECT * FROM empresas ORDER BY nome_empresa')->fetchAll();
+$empresas = $pdo->query('
+    SELECT e.*,
+           EXISTS(SELECT 1 FROM servicos s WHERE s.id_empresa = e.id_empresa) AS tem_servico
+    FROM empresas e
+    ORDER BY e.nome_empresa
+')->fetchAll();
 
 $editId = isset($_GET['edit']) ? (int) $_GET['edit'] : 0;
 $empresaEdicao = null;
@@ -177,10 +248,11 @@ if (!$empresaEdicao && $editando) {
     }
 }
 
+$tipoDocumento = tipoDocumentoAtual($empresaEdicao, $formOld);
+
 $pageTitle = 'Empresas';
 $currentPage = 'empresas';
 $pageScript = 'pages/empresas.js';
-$pageScriptModule = false;
 
 require __DIR__ . '/../templates/header.php';
 
@@ -239,11 +311,26 @@ require __DIR__ . '/../templates/header.php';
                         </div>
 
                         <div class="col-md-6">
-                            <label for="cnpj" class="form-label">CNPJ <span class="text-danger">*</span></label>
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                                <label for="cnpj" class="form-label mb-0" id="label-documento">
+                                    <?= $tipoDocumento === 'cpf' ? 'CPF' : 'CNPJ' ?> <span class="text-danger">*</span>
+                                </label>
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Tipo de documento">
+                                    <input type="radio" class="btn-check" name="tipo_documento" id="tipo-cnpj" value="cnpj"
+                                           <?= $tipoDocumento === 'cnpj' ? 'checked' : '' ?>>
+                                    <label class="btn btn-outline-secondary" for="tipo-cnpj">CNPJ</label>
+                                    <input type="radio" class="btn-check" name="tipo_documento" id="tipo-cpf" value="cpf"
+                                           <?= $tipoDocumento === 'cpf' ? 'checked' : '' ?>>
+                                    <label class="btn btn-outline-secondary" for="tipo-cpf">CPF</label>
+                                </div>
+                            </div>
                             <input type="text" class="form-control" id="cnpj" name="cnpj"
                                    value="<?= campoFormulario('cnpj', $empresaEdicao, $formOld) ?>"
-                                   placeholder="00.000.000/0000-00" required maxlength="20">
-                            <div class="invalid-feedback">Informe o CNPJ.</div>
+                                   placeholder="<?= $tipoDocumento === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00' ?>"
+                                   required maxlength="20">
+                            <div class="invalid-feedback" id="feedback-documento">
+                                Informe o <?= $tipoDocumento === 'cpf' ? 'CPF' : 'CNPJ' ?>.
+                            </div>
                         </div>
 
                         <div class="col-md-6">
@@ -296,9 +383,22 @@ require __DIR__ . '/../templates/header.php';
     <div class="tab-pane fade <?= $aba === 'visualizar' ? 'show active' : '' ?>" id="painel-visualizar" role="tabpanel">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom py-3">
-                <h5 class="card-title mb-0 fw-semibold">
-                    <i class="bi bi-table me-2 text-secondary"></i>Empresas cadastradas
-                </h5>
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <h5 class="card-title mb-0 fw-semibold">
+                        <i class="bi bi-table me-2 text-secondary"></i>Empresas cadastradas
+                    </h5>
+                    <?php if (count($empresas) > 0): ?>
+                        <div class="d-flex gap-2">
+                            <input type="search" class="form-control form-control-sm" id="filtro-empresas-busca"
+                                   placeholder="Buscar" autocomplete="off" style="width: 180px;">
+                            <select class="form-select form-select-sm" id="filtro-empresas-status" style="width: 130px;">
+                                <option value="">Status</option>
+                                <option value="Ativo">Ativas</option>
+                                <option value="Inativo">Inativas</option>
+                            </select>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -321,7 +421,9 @@ require __DIR__ . '/../templates/header.php';
                             </tr>
                         <?php else: ?>
                             <?php foreach ($empresas as $empresa): ?>
-                                <tr>
+                                <tr class="linha-empresa"
+                                    data-busca="<?= htmlspecialchars(mb_strtolower(trim($empresa['nome_empresa'] . ' ' . $empresa['cnpj'] . ' ' . ($empresa['cidade'] ?? '')))) ?>"
+                                    data-status="<?= htmlspecialchars((string) $empresa['status']) ?>">
                                     <td class="fw-semibold"><?= htmlspecialchars($empresa['nome_empresa']) ?></td>
                                     <td><?= htmlspecialchars($empresa['cnpj']) ?></td>
                                     <td><?= htmlspecialchars($empresa['cidade'] ?? '') ?: '—' ?></td>
@@ -367,11 +469,25 @@ require __DIR__ . '/../templates/header.php';
                                                         </form>
                                                     <?php endif; ?>
                                                 </li>
+                                                <li>
+                                                    <form method="post" action="empresas.php" class="form-excluir-empresa m-0"
+                                                          data-nome="<?= htmlspecialchars($empresa['nome_empresa']) ?>"
+                                                          data-tem-servico="<?= (int) $empresa['tem_servico'] ?>">
+                                                        <input type="hidden" name="acao" value="excluir">
+                                                        <input type="hidden" name="id_empresa" value="<?= (int) $empresa['id_empresa'] ?>">
+                                                        <button type="submit" class="dropdown-item text-danger">
+                                                            <i class="bi bi-trash me-2"></i>Excluir
+                                                        </button>
+                                                    </form>
+                                                </li>
                                             </ul>
                                         </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
+                            <tr id="filtro-empresas-vazio" class="d-none">
+                                <td colspan="8" class="text-muted">Nenhuma empresa encontrada com esse filtro.</td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>

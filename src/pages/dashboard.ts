@@ -1,5 +1,5 @@
 import { apiGet } from '../api/client.js';
-import type { DashboardData, DashboardTotais, ServicoPorStatus } from '../types/tipos.js';
+import type { DashboardData, DashboardTotais, RankingItem, ServicoPorStatus } from '../types/tipos.js';
 import { badgeClass, formatarMoeda } from '../utils/formatters.js';
 
 function setText(id: string, text: string): void {
@@ -21,6 +21,30 @@ function normalizarServicosPorStatus(raw: unknown): ServicoPorStatus[] {
     return [];
 }
 
+function normalizarRanking(raw: unknown): RankingItem[] {
+    if (!Array.isArray(raw)) {
+        return [];
+    }
+
+    return raw.filter((row): row is RankingItem => row != null && typeof row === 'object' && 'nome' in row);
+}
+
+function destaqueDoRanking(itens: RankingItem[], vazio: string): string {
+    const ordenados = itens
+        .filter((item) => Number(item.total) > 0)
+        .sort((a, b) => {
+            const diff = Number(b.total) - Number(a.total);
+
+            if (diff !== 0) {
+                return diff;
+            }
+
+            return String(a.nome).localeCompare(String(b.nome), 'pt-BR');
+        });
+
+    return ordenados[0]?.nome?.trim() || vazio;
+}
+
 function calcularTotaisServicos(rows: ServicoPorStatus[]): DashboardTotais {
     return rows.reduce<DashboardTotais>(
         (acc, row) => ({
@@ -29,10 +53,6 @@ function calcularTotaisServicos(rows: ServicoPorStatus[]): DashboardTotais {
         }),
         { quantidade: 0, receita: 0 }
     );
-}
-
-function calcularReceitaTotal(rows: ServicoPorStatus[]): number {
-    return rows.reduce((total, row) => total + Number(row?.receita ?? 0), 0);
 }
 
 function renderTabelaStatus(rows: ServicoPorStatus[], totais: DashboardTotais): void {
@@ -95,13 +115,21 @@ function renderIndicadores(data: DashboardData | null, receitaTotal: number, err
     }
 
     const ind = data?.indicadores;
+    const produtoDestaque = destaqueDoRanking(
+        normalizarRanking(data?.ranking_produtos),
+        'Nenhum produto registrado'
+    );
+    const empresaDestaque = destaqueDoRanking(
+        normalizarRanking(data?.ranking_empresas),
+        'Nenhuma empresa registrada'
+    );
 
     setText('kpi-receita', formatarMoeda(String(receitaTotal)));
     setText('kpi-total-servicos', ind?.total_servicos || '0');
     setText('kpi-pendentes', ind?.servicos_pendentes || '0');
     setText('kpi-estoque-baixo', ind?.produtos_estoque_baixo || '0');
-    setText('destaque-produto', ind?.produto_mais_usado?.trim() || 'Nenhum produto registrado');
-    setText('destaque-empresa', ind?.empresa_destaque?.trim() || 'Nenhuma empresa registrada');
+    setText('destaque-produto', produtoDestaque);
+    setText('destaque-empresa', empresaDestaque);
 }
 
 async function carregarDashboard(): Promise<void> {
@@ -109,9 +137,8 @@ async function carregarDashboard(): Promise<void> {
         const data = await apiGet<DashboardData>('api/dashboard.php');
         const rows = normalizarServicosPorStatus(data?.servicos_por_status);
         const totais = calcularTotaisServicos(rows);
-        const receitaTotal = calcularReceitaTotal(rows);
 
-        renderIndicadores(data, receitaTotal);
+        renderIndicadores(data, totais.receita);
         renderTabelaStatus(rows, totais);
     } catch (error) {
         const msg = error instanceof Error ? error.message : 'Erro desconhecido';

@@ -46,14 +46,18 @@ function catalogo_produtos(?int $limit = null): array
     return catalogo_pdo()->query($sql)->fetchAll();
 }
 
-function catalogo_empresas(?int $limit = null): array
+function catalogo_empresas(?int $limit = null, bool $somenteAtivas = true): array
 {
-    $sql = "
-        SELECT nome_empresa, cidade, endereco, telefone, email
+    $sql = '
+        SELECT nome_empresa, cidade, endereco, telefone, email, status
         FROM empresas
-        WHERE status = 'Ativo'
-        ORDER BY nome_empresa
-    ";
+    ';
+
+    if ($somenteAtivas) {
+        $sql .= " WHERE status = 'Ativo'";
+    }
+
+    $sql .= ' ORDER BY nome_empresa';
 
     if ($limit !== null) {
         $sql .= ' LIMIT ' . $limit;
@@ -83,10 +87,38 @@ function formatar_data(?string $data): string
     return $dt instanceof DateTime ? $dt->format('d/m/Y') : htmlspecialchars($data);
 }
 
-function card_servico(array $servico, bool $completo = false): void
+function catalogo_barra_filtro(array $opcoesSelect, string $campoSelect, string $placeholder = 'Buscar'): void
 {
     ?>
-    <div class="col-md-6 col-lg-4">
+    <div class="d-flex flex-nowrap gap-2" id="catalogo-filtro"
+         data-campo-texto="busca" data-campo-select="<?= htmlspecialchars($campoSelect) ?>">
+        <input type="search" class="form-control form-control-sm" id="filtro-catalogo-busca"
+               placeholder="<?= htmlspecialchars($placeholder) ?>" autocomplete="off" style="width: 180px;">
+        <select class="form-select form-select-sm" id="filtro-catalogo-select" style="width: 150px;">
+            <?php foreach ($opcoesSelect as $valor => $label): ?>
+                <option value="<?= htmlspecialchars((string) $valor) ?>"><?= htmlspecialchars($label) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <?php
+}
+
+function catalogo_filtro_vazio(): void
+{
+    ?>
+    <div id="filtro-catalogo-vazio" class="col-12 d-none">
+        <div class="alert alert-light border mb-0">Nenhum resultado com esse filtro.</div>
+    </div>
+    <?php
+}
+
+function card_servico(array $servico, bool $completo = false): void
+{
+    $busca = mb_strtolower(trim((string) ($servico['descricao'] ?? '') . ' ' . (string) ($servico['nome_empresa'] ?? '')));
+    ?>
+    <div class="col-md-6 col-lg-4 item-catalogo"
+         data-busca="<?= htmlspecialchars($busca) ?>"
+         data-status="<?= htmlspecialchars((string) ($servico['status'] ?? '')) ?>">
         <div class="card catalog-card shadow-sm">
             <div class="card-body">
                 <div class="catalog-icon mb-3"><i class="bi bi-tools"></i></div>
@@ -109,8 +141,12 @@ function card_servico(array $servico, bool $completo = false): void
 
 function card_produto(array $produto): void
 {
+    $quantidade = (int) ($produto['quantidade'] ?? 0);
+    $nivel = $quantidade <= 5 ? 'baixo' : 'normal';
     ?>
-    <div class="col-md-6 col-lg-3">
+    <div class="col-md-6 col-lg-3 item-catalogo"
+         data-busca="<?= htmlspecialchars(mb_strtolower((string) ($produto['nome_produto'] ?? ''))) ?>"
+         data-nivel="<?= $nivel ?>">
         <div class="card catalog-card shadow-sm">
             <div class="card-body">
                 <div class="catalog-icon mb-3"><i class="bi bi-box-seam"></i></div>
@@ -127,13 +163,21 @@ function card_produto(array $produto): void
 
 function card_empresa(array $empresa, bool $completo = false): void
 {
+    $busca = mb_strtolower(trim((string) ($empresa['nome_empresa'] ?? '') . ' ' . (string) ($empresa['cidade'] ?? '')));
     ?>
-    <div class="col-md-6">
+    <div class="col-md-6 item-catalogo"
+         data-busca="<?= htmlspecialchars($busca) ?>"
+         data-status="<?= htmlspecialchars((string) ($empresa['status'] ?? 'Ativo')) ?>">
         <div class="card catalog-card shadow-sm">
             <div class="card-body d-flex gap-3">
                 <div class="catalog-icon flex-shrink-0"><i class="bi bi-building"></i></div>
                 <div>
-                    <h3 class="h5 fw-semibold mb-1"><?= e($empresa['nome_empresa'] ?? null) ?></h3>
+                    <h3 class="h5 fw-semibold mb-1">
+                        <?= e($empresa['nome_empresa'] ?? null) ?>
+                        <?php if (($empresa['status'] ?? 'Ativo') === 'Inativo'): ?>
+                            <span class="badge rounded-pill text-bg-secondary fs-6 fw-normal">Inativo</span>
+                        <?php endif; ?>
+                    </h3>
                     <p class="text-muted small mb-1"><?= e($empresa['cidade'] ?? null) ?></p>
                     <?php if ($completo): ?>
                         <p class="text-muted small mb-1"><?= e($empresa['endereco'] ?? null) ?></p>
