@@ -14,7 +14,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
     if ($usuarioInformado === '' || $senha === '') {
         $erro = 'Informe usuário e senha.';
-    } elseif ($usuarioInformado === 'admin' && $senha === 'admin123') {
+    } elseif ($usuarioInformado === 'admin' && $senha === 'admin1234') {
         header('Location: ' . $paths['admin_url'] . 'index.php');
         exit;
     } else {
