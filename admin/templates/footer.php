@@ -10,6 +10,9 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/imask@7.6.1/dist/imask.min.js"></script>
+<?php foreach ($pageExtraJs ?? [] as $js): ?>
+<script src="<?= htmlspecialchars((string) $js) ?>"></script>
+<?php endforeach; ?>
 <?php if (!empty($pageScript)):
     $paths = $paths ?? app_paths();
     $scriptDiskPath = $paths['disk'] . '/assets/js/' . $pageScript;

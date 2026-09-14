@@ -113,7 +113,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $id = (int) ($_POST['id_servico'] ?? 0);
             $idEmpresa = (int) ($_POST['id_empresa'] ?? 0);
             $dataServico = trim((string) ($_POST['data_servico'] ?? ''));
-            $descricao = trim((string) ($_POST['descricao'] ?? ''));
+            $descricao = html_seguro(trim((string) ($_POST['descricao'] ?? '')));
             $status = trim((string) ($_POST['status'] ?? 'Pendente'));
             $valorTotal = (float) str_replace(',', '.', (string) ($_POST['valor_total'] ?? '0'));
             $produtos = produtosDoPost($_POST);
@@ -126,7 +126,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 throw new InvalidArgumentException('Informe uma data válida.');
             }
 
-            if ($descricao === '') {
+            if (trim(strip_tags($descricao)) === '') {
                 throw new InvalidArgumentException('A descrição do serviço é obrigatória.');
             }
 
@@ -311,6 +311,14 @@ if ($statusAtual === '') {
 $pageTitle = 'Serviços';
 $currentPage = 'servicos';
 $pageScript = 'pages/servicos.js';
+$pageExtraCss = [
+    'https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs5.min.css',
+];
+$pageExtraJs = [
+    'https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js',
+    'https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs5.min.js',
+    'https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/lang/summernote-pt-BR.min.js',
+];
 
 require __DIR__ . '/../templates/header.php';
 
@@ -392,8 +400,8 @@ require __DIR__ . '/../templates/header.php';
 
                             <div class="col-12">
                                 <label for="descricao" class="form-label">Descrição <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="descricao" name="descricao" rows="3"
-                                          placeholder="Ex.: Usinagem de eixos e flanges" required><?= campoFormulario('descricao', $servicoEdicao, $formOld) ?></textarea>
+                                <textarea class="form-control" id="descricao" name="descricao" rows="8"
+                                          placeholder="Digite a descrição"><?= campoFormulario('descricao', $servicoEdicao, $formOld) ?></textarea>
                                 <div class="invalid-feedback">Informe a descrição do serviço.</div>
                             </div>
 
@@ -533,12 +541,13 @@ require __DIR__ . '/../templates/header.php';
                                 <?php
                                 $dataBr = DateTime::createFromFormat('Y-m-d', (string) $servico['data_servico']);
                                 $dataExibicao = $dataBr instanceof DateTime ? $dataBr->format('d/m/Y') : (string) $servico['data_servico'];
-                                $busca = mb_strtolower(trim((string) $servico['descricao'] . ' ' . (string) $servico['nome_empresa']));
+                                $descricaoLista = trim(html_entity_decode(strip_tags((string) $servico['descricao']), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                                $busca = mb_strtolower(trim($descricaoLista . ' ' . (string) $servico['nome_empresa']));
                                 ?>
                                 <tr class="linha-servico"
                                     data-busca="<?= htmlspecialchars($busca) ?>"
                                     data-status="<?= htmlspecialchars((string) $servico['status']) ?>">
-                                    <td class="fw-semibold"><?= htmlspecialchars((string) $servico['descricao']) ?></td>
+                                    <td class="fw-semibold"><?= $descricaoLista !== '' ? htmlspecialchars($descricaoLista) : '—' ?></td>
                                     <td><?= htmlspecialchars((string) $servico['nome_empresa']) ?></td>
                                     <td><?= htmlspecialchars($dataExibicao) ?></td>
                                     <td>
@@ -560,7 +569,7 @@ require __DIR__ . '/../templates/header.php';
                                                 </li>
                                                 <li>
                                                     <form method="post" action="servicos.php" class="form-excluir-servico m-0"
-                                                          data-nome="<?= htmlspecialchars((string) $servico['descricao']) ?>">
+                                                          data-nome="<?= htmlspecialchars($descricaoLista !== '' ? $descricaoLista : 'este serviço') ?>">
                                                         <input type="hidden" name="acao" value="excluir">
                                                         <input type="hidden" name="id_servico" value="<?= (int) $servico['id_servico'] ?>">
                                                         <button type="submit" class="dropdown-item text-danger">

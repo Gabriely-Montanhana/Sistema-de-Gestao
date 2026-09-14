@@ -114,7 +114,7 @@ function catalogo_filtro_vazio(): void
 
 function card_servico(array $servico, bool $completo = false): void
 {
-    $busca = mb_strtolower(trim((string) ($servico['descricao'] ?? '') . ' ' . (string) ($servico['nome_empresa'] ?? '')));
+    $busca = mb_strtolower(trim(strip_tags((string) ($servico['descricao'] ?? '')) . ' ' . (string) ($servico['nome_empresa'] ?? '')));
     ?>
     <div class="col-md-6 col-lg-4 item-catalogo"
          data-busca="<?= htmlspecialchars($busca) ?>"
@@ -122,7 +122,7 @@ function card_servico(array $servico, bool $completo = false): void
         <div class="card catalog-card shadow-sm">
             <div class="card-body">
                 <div class="catalog-icon mb-3"><i class="bi bi-tools"></i></div>
-                <h3 class="h5 fw-semibold"><?= e($servico['descricao'] ?? null, 'Serviço') ?></h3>
+                <h3 class="h5 fw-semibold"><?= texto_simples($servico['descricao'] ?? null, 'Serviço') ?></h3>
                 <p class="text-muted small mb-2"><?= e($servico['nome_empresa'] ?? null) ?></p>
                 <?php if ($completo): ?>
                     <p class="text-muted small mb-3">Data: <?= formatar_data($servico['data_servico'] ?? null) ?></p>
