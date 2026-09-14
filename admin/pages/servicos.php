@@ -234,12 +234,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     }
 }
 
-$servicos = $pdo->query('
+$servicos = $pdo->query("
     SELECT s.*, e.nome_empresa
     FROM servicos s
     INNER JOIN empresas e ON e.id_empresa = s.id_empresa
-    ORDER BY s.data_servico DESC, s.id_servico DESC
-')->fetchAll();
+    ORDER BY FIELD(s.status, 'Em Andamento', 'Pendente', 'Concluído', 'Cancelado'), s.data_servico DESC, s.id_servico DESC
+")->fetchAll();
 
 $empresas = $pdo->query("
     SELECT id_empresa, nome_empresa, status
@@ -362,7 +362,7 @@ require __DIR__ . '/../templates/header.php';
                     <?= $editando ? 'Editar serviço' : 'Novo serviço' ?>
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body cadastro-scroll">
                 <?php if (count($empresas) === 0): ?>
                     <div class="alert alert-warning mb-0">
                         Cadastre uma empresa antes de criar um serviço.
@@ -398,13 +398,6 @@ require __DIR__ . '/../templates/header.php';
                                 <div class="invalid-feedback">Informe a data do serviço.</div>
                             </div>
 
-                            <div class="col-12">
-                                <label for="descricao" class="form-label">Descrição <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="descricao" name="descricao" rows="8"
-                                          placeholder="Digite a descrição"><?= campoFormulario('descricao', $servicoEdicao, $formOld) ?></textarea>
-                                <div class="invalid-feedback">Informe a descrição do serviço.</div>
-                            </div>
-
                             <div class="col-md-6">
                                 <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
                                 <select class="form-select" id="status" name="status" required>
@@ -422,6 +415,13 @@ require __DIR__ . '/../templates/header.php';
                                        value="<?= campoFormulario('valor_total', $servicoEdicao, $formOld) ?>"
                                        placeholder="0,00" required min="0" step="0.01">
                                 <div class="invalid-feedback">Informe o valor total.</div>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="descricao" class="form-label">Descrição <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="descricao" name="descricao" rows="8"
+                                          placeholder="Digite a descrição"><?= campoFormulario('descricao', $servicoEdicao, $formOld) ?></textarea>
+                                <div class="invalid-feedback">Informe a descrição do serviço.</div>
                             </div>
 
                             <div class="col-12">
@@ -519,10 +519,11 @@ require __DIR__ . '/../templates/header.php';
                     <?php endif; ?>
                 </div>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive lista-visualizar">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
+                            <th style="width: 70px;">ID</th>
                             <th>Descrição</th>
                             <th>Empresa</th>
                             <th>Data</th>
@@ -534,7 +535,7 @@ require __DIR__ . '/../templates/header.php';
                     <tbody>
                         <?php if (count($servicos) === 0): ?>
                             <tr>
-                                <td colspan="6" class="text-muted">Nenhum serviço cadastrado.</td>
+                                <td colspan="7" class="text-muted">Nenhum serviço cadastrado.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($servicos as $servico): ?>
@@ -542,11 +543,13 @@ require __DIR__ . '/../templates/header.php';
                                 $dataBr = DateTime::createFromFormat('Y-m-d', (string) $servico['data_servico']);
                                 $dataExibicao = $dataBr instanceof DateTime ? $dataBr->format('d/m/Y') : (string) $servico['data_servico'];
                                 $descricaoLista = trim(html_entity_decode(strip_tags((string) $servico['descricao']), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-                                $busca = mb_strtolower(trim($descricaoLista . ' ' . (string) $servico['nome_empresa']));
+                                $idServico = (int) $servico['id_servico'];
+                                $busca = mb_strtolower(trim($idServico . ' ' . $descricaoLista . ' ' . (string) $servico['nome_empresa']));
                                 ?>
                                 <tr class="linha-servico"
                                     data-busca="<?= htmlspecialchars($busca) ?>"
                                     data-status="<?= htmlspecialchars((string) $servico['status']) ?>">
+                                    <td><?= $idServico ?></td>
                                     <td class="fw-semibold"><?= $descricaoLista !== '' ? htmlspecialchars($descricaoLista) : '—' ?></td>
                                     <td><?= htmlspecialchars((string) $servico['nome_empresa']) ?></td>
                                     <td><?= htmlspecialchars($dataExibicao) ?></td>
@@ -558,7 +561,8 @@ require __DIR__ . '/../templates/header.php';
                                     <td><?= formatar_moeda($servico['valor_total']) ?></td>
                                     <td class="text-end">
                                         <div class="dropdown">
-                                            <button class="btn-acoes" type="button" data-bs-toggle="dropdown" aria-label="Ações">
+                                            <button class="btn-acoes" type="button" data-bs-toggle="dropdown"
+                                                    data-bs-popper-config='{"strategy":"fixed"}' aria-label="Ações">
                                                 <i class="bi bi-three-dots-vertical"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
@@ -583,7 +587,7 @@ require __DIR__ . '/../templates/header.php';
                                 </tr>
                             <?php endforeach; ?>
                             <tr id="filtro-servicos-vazio" class="d-none">
-                                <td colspan="6" class="text-muted">Nenhum serviço encontrado com esse filtro.</td>
+                                <td colspan="7" class="text-muted">Nenhum serviço encontrado com esse filtro.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>

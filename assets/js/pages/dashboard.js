@@ -36,7 +36,7 @@ function destaqueDoRanking(itens, vazio) {
 function calcularTotaisServicos(rows) {
     return rows.reduce((acc, row) => ({
         quantidade: acc.quantidade + Number(row?.quantidade ?? 0),
-        receita: acc.receita + Number(row?.receita ?? 0),
+        receita: acc.receita + (row?.status === 'Cancelado' ? 0 : Number(row?.receita ?? 0)),
     }), { quantidade: 0, receita: 0 });
 }
 function renderTabelaStatus(rows, totais) {

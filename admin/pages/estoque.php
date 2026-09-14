@@ -383,7 +383,7 @@ require __DIR__ . '/../templates/header.php';
                     <?php endif; ?>
                 </div>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive lista-visualizar">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
@@ -415,7 +415,8 @@ require __DIR__ . '/../templates/header.php';
                                     </td>
                                     <td class="text-end">
                                         <div class="dropdown">
-                                            <button class="btn-acoes" type="button" data-bs-toggle="dropdown" aria-label="Ações">
+                                            <button class="btn-acoes" type="button" data-bs-toggle="dropdown"
+                                                    data-bs-popper-config='{"strategy":"fixed"}' aria-label="Ações">
                                                 <i class="bi bi-three-dots-vertical"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">

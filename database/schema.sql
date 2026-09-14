@@ -83,7 +83,7 @@ empresas_ranking AS (
   GROUP BY emp.id_empresa, emp.nome_empresa
 )
 SELECT
-  (SELECT COALESCE(SUM(receita), 0) FROM receita_por_status) AS receita_total,
+  (SELECT COALESCE(SUM(receita), 0) FROM receita_por_status WHERE status <> 'Cancelado') AS receita_total,
   (SELECT COALESCE(SUM(total_servicos), 0) FROM receita_por_status) AS total_servicos,
   (SELECT COALESCE(SUM(total_servicos), 0) FROM receita_por_status WHERE status = 'Pendente') AS servicos_pendentes,
   (SELECT COUNT(*) FROM estoque WHERE quantidade <= 5) AS produtos_estoque_baixo,
@@ -210,26 +210,54 @@ DELIMITER ;
 
 DELETE FROM servico_produtos;
 DELETE FROM servicos;
+DELETE FROM estoque_movimentos;
 DELETE FROM estoque;
 DELETE FROM empresas;
 
-INSERT INTO empresas (nome_empresa, cnpj, endereco, telefone, email) VALUES
-('Metalúrgica Silva', '12.345.678/0001-90', 'Rua das Indústrias, 500', '(11) 3456-7890', 'contato@metalurgicasilva.com.br'),
-('Indústria Mecânica Oliveira', '98.765.432/0001-10', 'Av. Brasil, 1200', '(41) 99887-6543', 'compras@imec.com.br');
+ALTER TABLE empresas AUTO_INCREMENT = 1;
+ALTER TABLE estoque AUTO_INCREMENT = 1;
+ALTER TABLE servicos AUTO_INCREMENT = 1;
+ALTER TABLE servico_produtos AUTO_INCREMENT = 1;
+ALTER TABLE estoque_movimentos AUTO_INCREMENT = 1;
+
+INSERT INTO empresas (nome_empresa, cnpj, cidade, endereco, telefone, email, status) VALUES
+('Metalúrgica Silva', '12.345.678/0001-90', 'São Paulo', 'Rua das Indústrias, 500', '(11) 3456-7890', 'contato@metalurgicasilva.com.br', 'Ativo'),
+('Indústria Mecânica Oliveira', '98.765.432/0001-10', 'Curitiba', 'Av. Brasil, 1200', '(41) 99887-6543', 'compras@imec.com.br', 'Ativo'),
+('Agropeças Horizonte', '11.222.333/0001-44', 'Ribeirão Preto', 'Rod. Anhanguera, km 320', '(16) 3234-1100', 'contato@agrohorizonte.com.br', 'Ativo'),
+('Transportes Andrade', '55.666.777/0001-88', 'Campinas', 'Rua das Oficinas, 80', '(19) 3201-4455', 'manutencao@andrade.com.br', 'Ativo'),
+('Usinagem Central Ltda', '22.333.444/0001-55', 'Belo Horizonte', 'Av. do Contorno, 2100', '(31) 3333-9090', 'orcamento@usinagemcentral.com.br', 'Ativo'),
+('Petrovalve Brasil', '33.444.555/0001-66', 'Santos', 'Av. Conselheiro Nébias, 700', '(13) 3222-1010', 'pecas@petrovalve.com.br', 'Inativo');
 
 INSERT INTO estoque (nome_produto, preco, quantidade) VALUES
 ('Eixo usinado 50mm', 85.00, 25),
 ('Flange 100mm', 120.00, 3),
 ('Rotor usinado', 350.00, 2),
-('Bucha de bronze', 45.50, 50);
+('Bucha de bronze', 45.50, 50),
+('Pino de aço 20mm', 18.00, 40),
+('Polia 150mm', 95.00, 8),
+('Mancal fundido', 210.00, 4),
+('Anel de vedação', 12.50, 80),
+('Eixo usinado 80mm', 140.00, 12),
+('Chaveta 8mm', 6.00, 100);
 
 INSERT INTO servicos (id_empresa, data_servico, status, valor_total, descricao) VALUES
 (1, '2026-07-10', 'Concluído', 1500.00, 'Usinagem de eixos e flanges'),
 (1, '2026-07-15', 'Em Andamento', 1500.00, 'Fabricação de buchas especiais'),
-(2, '2026-07-20', 'Pendente', 1000.00, 'Orçamento para usinagem de rotores');
+(2, '2026-07-20', 'Pendente', 1000.00, 'Orçamento para usinagem de rotores'),
+(3, '2026-08-02', 'Concluído', 860.00, 'Recuperação de eixos para linha agrícola'),
+(4, '2026-08-12', 'Em Andamento', 2200.00, 'Usinagem de mancais para frota'),
+(5, '2026-08-18', 'Pendente', 740.00, 'Fabricação de polias sob medida'),
+(5, '2026-08-25', 'Concluído', 480.00, 'Ajuste dimensional de flanges'),
+(6, '2026-08-28', 'Cancelado', 3100.00, 'Orçamento de válvulas industriais');
 
 INSERT INTO servico_produtos (id_servico, id_estoque, quantidade) VALUES
 (1, 1, 10),
 (1, 2, 3),
 (2, 4, 8),
-(3, 3, 1);
+(3, 3, 1),
+(4, 1, 4),
+(4, 5, 12),
+(5, 7, 2),
+(6, 6, 3),
+(7, 2, 2),
+(7, 8, 10);

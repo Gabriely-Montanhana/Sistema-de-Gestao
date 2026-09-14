@@ -210,12 +210,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     }
 }
 
-$empresas = $pdo->query('
+$empresas = $pdo->query("
     SELECT e.*,
            EXISTS(SELECT 1 FROM servicos s WHERE s.id_empresa = e.id_empresa) AS tem_servico
     FROM empresas e
-    ORDER BY e.nome_empresa
-')->fetchAll();
+    ORDER BY FIELD(e.status, 'Inativo', 'Ativo'), e.nome_empresa
+")->fetchAll();
 
 $editId = isset($_GET['edit']) ? (int) $_GET['edit'] : 0;
 $empresaEdicao = null;
@@ -400,7 +400,7 @@ require __DIR__ . '/../templates/header.php';
                     <?php endif; ?>
                 </div>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive lista-visualizar">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
@@ -439,7 +439,8 @@ require __DIR__ . '/../templates/header.php';
                                     </td>
                                     <td class="text-end">
                                         <div class="dropdown">
-                                            <button class="btn-acoes" type="button" data-bs-toggle="dropdown" aria-label="Ações">
+                                            <button class="btn-acoes" type="button" data-bs-toggle="dropdown"
+                                                    data-bs-popper-config='{"strategy":"fixed"}' aria-label="Ações">
                                                 <i class="bi bi-three-dots-vertical"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">

@@ -18,6 +18,7 @@ $currentPage = $currentPage ?? 'dashboard';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="app-root" content="<?= htmlspecialchars($rootPath) ?>">
     <title><?= htmlspecialchars($pageTitle) ?> | Admin</title>
+    <link rel="icon" href="<?= htmlspecialchars($assetsPath) ?>img/favicon.svg" type="image/svg+xml">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,7 +28,7 @@ $currentPage = $currentPage ?? 'dashboard';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <link href="<?= $assetsPath ?>css/shared.css?v=2" rel="stylesheet">
-    <link href="<?= $assetsPath ?>css/admin.css?v=5" rel="stylesheet">
+    <link href="<?= $assetsPath ?>css/admin.css?v=7" rel="stylesheet">
     <?php foreach ($pageExtraCss ?? [] as $css): ?>
         <link href="<?= htmlspecialchars((string) $css) ?>" rel="stylesheet">
     <?php endforeach; ?>
