@@ -176,6 +176,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 throw new InvalidArgumentException('Produto não encontrado.');
             }
 
+            // Procedure: centraliza a movimentação no banco (valida, atualiza estoque e registra histórico).
             $stmt = $pdo->prepare('CALL sp_registrar_movimento(?, ?, ?)');
             $stmt->execute([$id, $tipo, $quantidade]);
             $stmt->closeCursor();

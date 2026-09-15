@@ -527,8 +527,8 @@ require __DIR__ . '/../templates/header.php';
                             <th>Descrição</th>
                             <th>Empresa</th>
                             <th>Data</th>
-                            <th>Status</th>
                             <th>Valor</th>
+                            <th>Status</th>
                             <th class="text-end" style="width: 60px;"></th>
                         </tr>
                     </thead>
@@ -553,12 +553,12 @@ require __DIR__ . '/../templates/header.php';
                                     <td class="fw-semibold"><?= $descricaoLista !== '' ? htmlspecialchars($descricaoLista) : '—' ?></td>
                                     <td><?= htmlspecialchars((string) $servico['nome_empresa']) ?></td>
                                     <td><?= htmlspecialchars($dataExibicao) ?></td>
+                                    <td><?= formatar_moeda($servico['valor_total']) ?></td>
                                     <td>
                                         <span class="badge rounded-pill <?= badge_status_admin((string) $servico['status']) ?>">
                                             <?= htmlspecialchars((string) $servico['status']) ?>
                                         </span>
                                     </td>
-                                    <td><?= formatar_moeda($servico['valor_total']) ?></td>
                                     <td class="text-end">
                                         <div class="dropdown">
                                             <button class="btn-acoes" type="button" data-bs-toggle="dropdown"

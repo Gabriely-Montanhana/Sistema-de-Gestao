@@ -17,6 +17,7 @@ function garantir_rotinas_sql(PDO $pdo): void
         END
     ");
 
+    // Recria a procedure de entrada/saída de estoque (o PHP chama com CALL).
     $pdo->exec('DROP PROCEDURE IF EXISTS sp_registrar_movimento');
     $pdo->exec("
         CREATE PROCEDURE sp_registrar_movimento(

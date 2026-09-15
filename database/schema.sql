@@ -103,13 +103,6 @@ ORDER BY FIELD(status, 'Pendente', 'Em Andamento', 'Concluído', 'Cancelado');
 -- ===========================================================
 -- TRIGGERS BEFORE UPDATE
 -- Padroniza valores positivos ao atualizar registros
-
-DROP TRIGGER IF EXISTS trg_estoque_before_update;
-DROP TRIGGER IF EXISTS trg_servicos_before_update;
-DROP TRIGGER IF EXISTS trg_servico_produtos_before_update;
-
-DELIMITER $$
-
 CREATE TRIGGER trg_estoque_before_update
 BEFORE UPDATE ON estoque
 FOR EACH ROW
@@ -140,14 +133,11 @@ BEGIN
         SET NEW.quantidade = 1;
     END IF;
 END$$
+-- ============================================================
 
-DELIMITER ;
-
-DROP FUNCTION IF EXISTS fn_nivel_estoque;
-DROP PROCEDURE IF EXISTS sp_registrar_movimento;
-
-DELIMITER $$
-
+-- ===========================================================
+-- FUNÇÔES
+-- Verifica o nível de estoque de um produto com base na quantidade disponível
 CREATE FUNCTION fn_nivel_estoque(p_quantidade INT)
 RETURNS VARCHAR(10) CHARSET utf8mb4
 DETERMINISTIC
@@ -157,7 +147,11 @@ BEGIN
     END IF;
     RETURN 'normal';
 END$$
+-- ===========================================================
 
+-- =========================================================
+-- PROCEDURES
+-- Entrada/saída de estoque: valida quantidade e tipo, atualiza o produto e grava o histórico
 CREATE PROCEDURE sp_registrar_movimento(
     IN p_id_estoque INT,
     IN p_tipo VARCHAR(10),
@@ -202,8 +196,7 @@ BEGIN
     VALUES (p_id_estoque, p_tipo, p_quantidade);
 END$$
 
-DELIMITER ;
--- ============================================================
+
 
 -- ============================================================
 -- DADOS INICIAIS (mockup do dashboard)

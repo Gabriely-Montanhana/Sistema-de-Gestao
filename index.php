@@ -13,9 +13,9 @@ $servicos = [];
 $erroCatalogo = null;
 
 try {
-    $servicos = catalogo_servicos(6);
-    $produtos = catalogo_produtos(8);
-    $empresas = catalogo_empresas(4);
+    $servicos = catalogo_servicos(3);
+    $produtos = catalogo_produtos(4);
+    $empresas = catalogo_empresas(2);
 } catch (Throwable $e) {
     $erroCatalogo = 'Catálogo indisponível no momento. Verifique a conexão com o banco.';
 }
